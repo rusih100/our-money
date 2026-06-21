@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "license": "MIT",
+  "description": "Десктоп-приложение для ручной разметки CSV-выписок Т-Банка (клавиатура-first).",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

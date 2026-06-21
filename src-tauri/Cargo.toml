@@ -1,8 +1,9 @@
 [package]
 name = "our-money-scaffold"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Our Money — десктоп-приложение для ручной разметки CSV-выписок Т-Банка."
+authors = ["Rusih100 <rusih100@gmail.com>"]
+license = "MIT"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
