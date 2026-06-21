@@ -10,6 +10,7 @@ export function TopBar(): React.ReactElement {
   const toggleTheme = useStore((s) => s.toggleTheme);
   const toggleHelp = useStore((s) => s.toggleHelp);
   const setShowCategories = useStore((s) => s.setShowCategories);
+  const setShowInitiators = useStore((s) => s.setShowInitiators);
 
   const annotated = useMemo(
     () => dataset?.rows.filter((r) => r.annotation.annotated).length ?? 0,
@@ -50,6 +51,12 @@ export function TopBar(): React.ReactElement {
                 className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs text-fg hover:border-accent"
               >
                 Категории
+              </button>
+              <button
+                onClick={() => setShowInitiators(true)}
+                className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs text-fg hover:border-accent"
+              >
+                Инициаторы
               </button>
               <button
                 onClick={() => void exportDataset()}

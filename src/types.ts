@@ -1,13 +1,17 @@
 // Core domain types. No `any` anywhere in the app.
 
 /** A single annotation the user attaches to a transaction row. */
-export type NeedWant = "need" | "want" | "saving";
+export type NeedWant = "need" | "want";
 
 export interface Annotation {
   true_category: string;
+  /** Кто инициировал трату (имя из управляемого списка). */
+  initiator: string;
   is_recurring: boolean;
   need_want: NeedWant | "";
   note: string;
+  /** Трата исключена из учёта — не попадает в экспорт. */
+  excluded: boolean;
   annotated: boolean;
 }
 
@@ -36,9 +40,13 @@ export interface Dataset {
   skipped: number;
 }
 
-/** The five new columns we append on export, in order. */
+/**
+ * Новые колонки, добавляемые на экспорте, по порядку. Поле `excluded` сюда не
+ * входит: исключённые строки просто не выводятся, колонка была бы всегда false.
+ */
 export const ANNOTATION_COLUMNS = [
   "true_category",
+  "initiator",
   "is_recurring",
   "need_want",
   "note",
@@ -48,9 +56,11 @@ export const ANNOTATION_COLUMNS = [
 export function emptyAnnotation(): Annotation {
   return {
     true_category: "",
+    initiator: "",
     is_recurring: false,
     need_want: "",
     note: "",
+    excluded: false,
     annotated: false,
   };
 }

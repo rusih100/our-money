@@ -8,6 +8,7 @@ import {
 import type { SavedAnnotations } from "../types";
 
 const CATEGORIES_FILE = "categories.json";
+const INITIATORS_FILE = "initiators.json";
 const PROGRESS_DIR = "progress";
 const opts = { baseDir: BaseDirectory.AppData } as const;
 
@@ -58,6 +59,27 @@ export async function loadCategories(): Promise<string[] | null> {
 export async function saveCategories(categories: string[]): Promise<void> {
   await ensureDir();
   await writeTextFile(CATEGORIES_FILE, JSON.stringify(categories, null, 2), opts);
+}
+
+// ---- Initiators -----------------------------------------------------------
+
+export async function loadInitiators(): Promise<string[] | null> {
+  try {
+    if (!(await exists(INITIATORS_FILE, opts))) return null;
+    const text = await readTextFile(INITIATORS_FILE, opts);
+    const parsed: unknown = JSON.parse(text);
+    if (Array.isArray(parsed) && parsed.every((c) => typeof c === "string")) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveInitiators(initiators: string[]): Promise<void> {
+  await ensureDir();
+  await writeTextFile(INITIATORS_FILE, JSON.stringify(initiators, null, 2), opts);
 }
 
 // ---- Per-file annotation progress -----------------------------------------

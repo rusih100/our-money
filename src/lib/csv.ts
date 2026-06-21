@@ -104,6 +104,8 @@ function annotationCell(col: (typeof ANNOTATION_COLUMNS)[number], a: Annotation)
   switch (col) {
     case "true_category":
       return a.true_category;
+    case "initiator":
+      return a.initiator;
     case "is_recurring":
       return a.is_recurring ? "true" : "false";
     case "need_want":
@@ -117,15 +119,17 @@ function annotationCell(col: (typeof ANNOTATION_COLUMNS)[number], a: Annotation)
 
 /**
  * Serialize a dataset back to CSV: original columns first (untouched), then the
- * five annotation columns appended. Semicolon delimiter, every field quoted —
+ * annotation columns appended. Semicolon delimiter, every field quoted —
  * matching the input style. Original cell values are emitted verbatim, so the
- * comma decimals and formatting round-trip exactly.
+ * comma decimals and formatting round-trip exactly. Rows flagged `excluded`
+ * («не учитывать») are dropped entirely.
  */
 export function serializeCsv(dataset: Dataset): string {
   const allHeaders = [...dataset.headers, ...ANNOTATION_COLUMNS];
   const lines: string[] = [allHeaders.map(quote).join(";")];
 
   for (const row of dataset.rows) {
+    if (row.annotation.excluded) continue;
     const original = dataset.headers.map((h) => quote(row.raw[h] ?? ""));
     const annotations = ANNOTATION_COLUMNS.map((c) => quote(annotationCell(c, row.annotation)));
     lines.push([...original, ...annotations].join(";"));

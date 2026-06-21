@@ -58,6 +58,14 @@ export function useHotkeys(): void {
         return;
       }
 
+      // Initiator by position: Shift+1..9. Under Shift `e.key` is a symbol
+      // (!@#…), so match the physical key via `e.code` (layout-independent).
+      if (e.shiftKey && /^Digit[1-9]$/.test(e.code)) {
+        e.preventDefault();
+        s.assignInitiatorByIndex(Number(e.code.slice(5)));
+        return;
+      }
+
       // Category by position: keys 1..9.
       if (/^[1-9]$/.test(e.key)) {
         e.preventDefault();
@@ -88,9 +96,9 @@ export function useHotkeys(): void {
           e.preventDefault();
           s.setNeedWant("want");
           break;
-        case "s":
+        case "x":
           e.preventDefault();
-          s.setNeedWant("saving");
+          s.excludeAndAdvance();
           break;
         case "c":
           e.preventDefault();

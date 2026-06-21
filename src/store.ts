@@ -28,6 +28,7 @@ interface UndoEntry {
 interface AppState {
   dataset: Dataset | null;
   categories: string[];
+  initiators: string[];
   current: number;
   filters: Filters;
   view: View;
@@ -35,11 +36,12 @@ interface AppState {
   editing: Editing;
   showHelp: boolean;
   showCategories: boolean;
+  showInitiators: boolean;
   undoStack: UndoEntry[];
   toast: Toast | null;
 
   // ---- lifecycle
-  loadDataset: (dataset: Dataset, savedCategories: string[]) => void;
+  loadDataset: (dataset: Dataset, savedCategories: string[], savedInitiators: string[]) => void;
   applySavedAnnotations: (saved: SavedAnnotations) => void;
   reset: () => void;
 
@@ -52,9 +54,13 @@ interface AppState {
   // ---- annotation
   assignCategoryByIndex: (n: number) => void;
   setTrueCategory: (cat: string) => void;
+  assignInitiatorByIndex: (n: number) => void;
+  setInitiator: (name: string) => void;
   toggleRecurring: () => void;
   setNeedWant: (value: NeedWant) => void;
   setNote: (note: string) => void;
+  excludeAndAdvance: () => void;
+  toggleExcluded: () => void;
   confirmAndAdvance: () => void;
   undo: () => void;
 
@@ -64,6 +70,12 @@ interface AppState {
   deleteCategory: (index: number) => void;
   moveCategory: (index: number, dir: -1 | 1) => void;
 
+  // ---- initiators
+  addInitiator: (name: string) => void;
+  renameInitiator: (index: number, name: string) => void;
+  deleteInitiator: (index: number) => void;
+  moveInitiator: (index: number, dir: -1 | 1) => void;
+
   // ---- ui
   setFilters: (patch: Partial<Filters>) => void;
   setView: (view: View) => void;
@@ -71,6 +83,7 @@ interface AppState {
   setEditing: (editing: Editing) => void;
   toggleHelp: () => void;
   setShowCategories: (show: boolean) => void;
+  setShowInitiators: (show: boolean) => void;
   pushToast: (message: string, kind?: Toast["kind"]) => void;
   clearToast: () => void;
 }
@@ -104,6 +117,7 @@ function mutateAnnotation(
 export const useStore = create<AppState>((set, get) => ({
   dataset: null,
   categories: [],
+  initiators: [],
   current: 0,
   filters: emptyFilters(),
   view: "focus",
@@ -111,13 +125,15 @@ export const useStore = create<AppState>((set, get) => ({
   editing: "none",
   showHelp: false,
   showCategories: false,
+  showInitiators: false,
   undoStack: [],
   toast: null,
 
-  loadDataset: (dataset, savedCategories) =>
+  loadDataset: (dataset, savedCategories, savedInitiators) =>
     set({
       dataset,
       categories: savedCategories,
+      initiators: savedInitiators,
       current: 0,
       filters: emptyFilters(),
       view: "focus",
@@ -163,6 +179,15 @@ export const useStore = create<AppState>((set, get) => ({
   setTrueCategory: (cat) =>
     set((state) => mutateAnnotation(state, state.current, { true_category: cat })),
 
+  assignInitiatorByIndex: (n) => {
+    const { initiators } = get();
+    const name = initiators[n - 1];
+    if (name) get().setInitiator(name);
+  },
+
+  setInitiator: (name) =>
+    set((state) => mutateAnnotation(state, state.current, { initiator: name })),
+
   toggleRecurring: () =>
     set((state) => {
       if (!state.dataset) return {};
@@ -174,6 +199,20 @@ export const useStore = create<AppState>((set, get) => ({
     set((state) => mutateAnnotation(state, state.current, { need_want: value })),
 
   setNote: (note) => set((state) => mutateAnnotation(state, state.current, { note })),
+
+  excludeAndAdvance: () =>
+    set((state) => {
+      const patched = mutateAnnotation(state, state.current, { excluded: true });
+      const max = (state.dataset?.rows.length ?? 1) - 1;
+      return { ...patched, current: Math.min(state.current + 1, max) };
+    }),
+
+  toggleExcluded: () =>
+    set((state) => {
+      if (!state.dataset) return {};
+      const cur = state.dataset.rows[state.current]?.annotation.excluded ?? false;
+      return mutateAnnotation(state, state.current, { excluded: !cur });
+    }),
 
   confirmAndAdvance: () =>
     set((state) => {
@@ -224,6 +263,34 @@ export const useStore = create<AppState>((set, get) => ({
       return { categories };
     }),
 
+  addInitiator: (name) =>
+    set((state) => {
+      const trimmed = name.trim();
+      if (!trimmed || state.initiators.includes(trimmed)) return {};
+      return { initiators: [...state.initiators, trimmed] };
+    }),
+
+  renameInitiator: (index, name) =>
+    set((state) => {
+      const trimmed = name.trim();
+      if (!trimmed) return {};
+      const initiators = state.initiators.slice();
+      initiators[index] = trimmed;
+      return { initiators };
+    }),
+
+  deleteInitiator: (index) =>
+    set((state) => ({ initiators: state.initiators.filter((_, i) => i !== index) })),
+
+  moveInitiator: (index, dir) =>
+    set((state) => {
+      const target = index + dir;
+      if (target < 0 || target >= state.initiators.length) return {};
+      const initiators = state.initiators.slice();
+      [initiators[index], initiators[target]] = [initiators[target], initiators[index]];
+      return { initiators };
+    }),
+
   setFilters: (patch) => set((state) => ({ filters: { ...state.filters, ...patch } })),
   setView: (view) => set({ view }),
 
@@ -237,6 +304,7 @@ export const useStore = create<AppState>((set, get) => ({
   setEditing: (editing) => set({ editing }),
   toggleHelp: () => set((state) => ({ showHelp: !state.showHelp })),
   setShowCategories: (show) => set({ showCategories: show }),
+  setShowInitiators: (show) => set({ showInitiators: show }),
 
   pushToast: (message, kind = "info") => set({ toast: { id: ++toastSeq, message, kind } }),
   clearToast: () => set({ toast: null }),

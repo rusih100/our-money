@@ -6,19 +6,22 @@ import type { NeedWant } from "../types";
 const NEED_WANT: { value: NeedWant; label: string; key: string }[] = [
   { value: "need", label: "Need", key: "n" },
   { value: "want", label: "Want", key: "w" },
-  { value: "saving", label: "Saving", key: "s" },
 ];
 
 export function FocusedView(): React.ReactElement | null {
   const dataset = useStore((s) => s.dataset);
   const current = useStore((s) => s.current);
   const categories = useStore((s) => s.categories);
+  const initiators = useStore((s) => s.initiators);
   const setTrueCategory = useStore((s) => s.setTrueCategory);
+  const setInitiator = useStore((s) => s.setInitiator);
   const toggleRecurring = useStore((s) => s.toggleRecurring);
   const setNeedWant = useStore((s) => s.setNeedWant);
   const setNote = useStore((s) => s.setNote);
+  const toggleExcluded = useStore((s) => s.toggleExcluded);
   const setEditing = useStore((s) => s.setEditing);
   const setShowCategories = useStore((s) => s.setShowCategories);
+  const setShowInitiators = useStore((s) => s.setShowInitiators);
 
   if (!dataset) return null;
   const row = dataset.rows[current];
@@ -109,6 +112,56 @@ export function FocusedView(): React.ReactElement | null {
         )}
       </div>
 
+      {/* Initiator selector */}
+      <div className="rounded-xl border border-border bg-surface px-5 py-4">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-xs font-medium uppercase tracking-wide text-fg-faint">
+            Инициатор
+          </span>
+          <button
+            onClick={() => setShowInitiators(true)}
+            className="text-xs text-accent hover:underline"
+          >
+            управлять…
+          </button>
+        </div>
+        {initiators.length === 0 ? (
+          <p className="text-sm text-fg-muted">
+            Список пуст —{" "}
+            <button onClick={() => setShowInitiators(true)} className="text-accent hover:underline">
+              добавьте инициаторов
+            </button>
+            .
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {initiators.map((name, i) => {
+              const active = a.initiator === name;
+              return (
+                <button
+                  key={name}
+                  onClick={() => setInitiator(name)}
+                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm ${
+                    active
+                      ? "border-accent bg-accent text-accent-fg"
+                      : "border-border bg-surface-2 text-fg hover:border-accent"
+                  }`}
+                >
+                  {i < 9 && (
+                    <span
+                      className={`kbd ${active ? "border-accent-fg/40 bg-transparent text-accent-fg" : ""}`}
+                    >
+                      ⇧{i + 1}
+                    </span>
+                  )}
+                  {name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Recurring + need/want */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-border bg-surface px-5 py-4">
@@ -136,7 +189,7 @@ export function FocusedView(): React.ReactElement | null {
 
         <div className="rounded-xl border border-border bg-surface px-5 py-4">
           <div className="mb-2 text-xs font-medium uppercase tracking-wide text-fg-faint">
-            Need / Want / Saving
+            Need / Want
           </div>
           <div className="flex overflow-hidden rounded-lg border border-border">
             {NEED_WANT.map((opt) => {
@@ -155,6 +208,33 @@ export function FocusedView(): React.ReactElement | null {
             })}
           </div>
         </div>
+      </div>
+
+      {/* Exclude flag */}
+      <div className="rounded-xl border border-border bg-surface px-5 py-4">
+        <div className="mb-2 text-xs font-medium uppercase tracking-wide text-fg-faint">
+          Не учитывать <span className="kbd ml-1">x</span>
+          <span className="ml-2 normal-case text-fg-faint">
+            x — пометить и перейти к следующей
+          </span>
+        </div>
+        <button
+          onClick={toggleExcluded}
+          className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+            a.excluded
+              ? "border-neg bg-neg/15 text-neg"
+              : "border-border bg-surface-2 text-fg"
+          }`}
+        >
+          <span
+            className={`flex h-4 w-4 items-center justify-center rounded border ${
+              a.excluded ? "border-neg bg-neg/20" : "border-fg-faint"
+            }`}
+          >
+            {a.excluded && "✓"}
+          </span>
+          {a.excluded ? "Исключена из экспорта" : "Учитывается"}
+        </button>
       </div>
 
       {/* Note */}

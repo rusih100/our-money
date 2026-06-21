@@ -21,15 +21,17 @@ export function SummaryPanel(): React.ReactElement | null {
     const needWant: Record<string, Bucket> = {
       need: emptyBucket(),
       want: emptyBucket(),
-      saving: emptyBucket(),
     };
     const recurring = { yes: emptyBucket(), no: emptyBucket() };
     const byCategory = new Map<string, Bucket>();
+    const byInitiator = new Map<string, Bucket>();
     let annotated = 0;
+    let excluded = 0;
 
     for (const r of rows) {
       const a = r.annotation;
       if (a.annotated) annotated++;
+      if (a.excluded) excluded++;
       const amt = Number.isNaN(r.amount) ? 0 : r.amount;
 
       if (a.need_want) {
@@ -47,10 +49,17 @@ export function SummaryPanel(): React.ReactElement | null {
         b.sum += amt;
         byCategory.set(a.true_category, b);
       }
+      if (a.initiator) {
+        const b = byInitiator.get(a.initiator) ?? emptyBucket();
+        b.count++;
+        b.sum += amt;
+        byInitiator.set(a.initiator, b);
+      }
     }
 
     const categories = [...byCategory.entries()].sort((x, y) => x[1].sum - y[1].sum);
-    return { total: rows.length, annotated, needWant, recurring, categories };
+    const initiators = [...byInitiator.entries()].sort((x, y) => x[1].sum - y[1].sum);
+    return { total: rows.length, annotated, excluded, needWant, recurring, categories, initiators };
   }, [dataset]);
 
   if (!dataset) return null;
@@ -59,10 +68,11 @@ export function SummaryPanel(): React.ReactElement | null {
     <div className="flex flex-col gap-4 text-sm">
       <Section title="Прогресс">
         <Row label="Размечено" value={`${stats.annotated} / ${stats.total}`} />
+        <Row label="Не учитываются" value={`${stats.excluded}`} />
       </Section>
 
-      <Section title="Need / Want / Saving">
-        {(["need", "want", "saving"] as const).map((k) => (
+      <Section title="Need / Want">
+        {(["need", "want"] as const).map((k) => (
           <Row
             key={k}
             label={k[0].toUpperCase() + k.slice(1)}
@@ -83,6 +93,16 @@ export function SummaryPanel(): React.ReactElement | null {
         ) : (
           stats.categories.map(([cat, b]) => (
             <Row key={cat} label={cat} value={`${b.count}`} amount={b.sum} />
+          ))
+        )}
+      </Section>
+
+      <Section title="По инициаторам">
+        {stats.initiators.length === 0 ? (
+          <p className="px-1 py-1 text-xs text-fg-faint">Пока никого не назначено.</p>
+        ) : (
+          stats.initiators.map(([name, b]) => (
+            <Row key={name} label={name} value={`${b.count}`} amount={b.sum} />
           ))
         )}
       </Section>

@@ -1,13 +1,14 @@
 import { useEffect, useRef } from "react";
 import { useStore } from "./store";
 import { useHotkeys } from "./hooks/useHotkeys";
-import { saveCategories, saveProgress } from "./lib/storage";
+import { saveCategories, saveInitiators, saveProgress } from "./lib/storage";
 import type { SavedAnnotations } from "./types";
 import { TopBar } from "./components/TopBar";
 import { EmptyState } from "./components/EmptyState";
 import { FocusedView } from "./components/FocusedView";
 import { ListView } from "./components/ListView";
 import { CategoryPanel } from "./components/CategoryPanel";
+import { InitiatorPanel } from "./components/InitiatorPanel";
 import { HelpOverlay } from "./components/HelpOverlay";
 import { Toast } from "./components/Toast";
 import "./styles.css";
@@ -17,6 +18,7 @@ function App(): React.ReactElement {
   const view = useStore((s) => s.view);
   const theme = useStore((s) => s.theme);
   const categories = useStore((s) => s.categories);
+  const initiators = useStore((s) => s.initiators);
 
   useHotkeys();
 
@@ -25,15 +27,20 @@ function App(): React.ReactElement {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
-  // Persist the category list whenever it changes (skip the initial mount).
-  const catLoaded = useRef(false);
+  // Persist the category/initiator lists whenever they change — but only once a
+  // dataset is loaded. Before any file is open the lists are their initial empty
+  // state; persisting then (e.g. StrictMode's double-invoked mount effect) would
+  // clobber the saved lists on disk. Editing these lists only happens with a
+  // dataset open, so gating on `dataset` is both safe and correct.
   useEffect(() => {
-    if (!catLoaded.current) {
-      catLoaded.current = true;
-      return;
-    }
+    if (!dataset) return;
     void saveCategories(categories);
-  }, [categories]);
+  }, [categories, dataset]);
+
+  useEffect(() => {
+    if (!dataset) return;
+    void saveInitiators(initiators);
+  }, [initiators, dataset]);
 
   // Debounced autosave of annotation progress, keyed to the loaded file.
   const saveTimer = useRef<number | undefined>(undefined);
@@ -65,6 +72,7 @@ function App(): React.ReactElement {
         )}
       </main>
       <CategoryPanel />
+      <InitiatorPanel />
       <HelpOverlay />
       <Toast />
     </div>

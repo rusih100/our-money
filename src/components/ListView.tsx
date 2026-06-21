@@ -95,7 +95,6 @@ export function ListView(): React.ReactElement | null {
             <option value="all">Need/Want: все</option>
             <option value="need">Need</option>
             <option value="want">Want</option>
-            <option value="saving">Saving</option>
           </select>
           <select
             value={filters.recurring}
@@ -110,12 +109,13 @@ export function ListView(): React.ReactElement | null {
         </div>
 
         {/* Header row */}
-        <div className="grid grid-cols-[88px_1fr_110px_140px_150px_70px_64px] gap-2 border-b border-border px-4 py-2 text-xs font-medium text-fg-faint">
+        <div className="grid grid-cols-[88px_1fr_110px_130px_130px_120px_56px_56px] gap-2 border-b border-border px-4 py-2 text-xs font-medium text-fg-faint">
           <span>Дата</span>
           <span>Описание</span>
           <span className="text-right">Сумма</span>
           <span>Банк. категория</span>
           <span>Моя категория</span>
+          <span>Инициатор</span>
           <span>N/W</span>
           <span className="text-right">Повт.</span>
         </div>
@@ -134,9 +134,9 @@ export function ListView(): React.ReactElement | null {
                     setCurrent(row.id);
                     setView("focus");
                   }}
-                  className={`absolute left-0 right-0 grid cursor-pointer grid-cols-[88px_1fr_110px_140px_150px_70px_64px] items-center gap-2 border-b border-border/60 px-4 text-xs hover:bg-surface ${
+                  className={`absolute left-0 right-0 grid cursor-pointer grid-cols-[88px_1fr_110px_130px_130px_120px_56px_56px] items-center gap-2 border-b border-border/60 px-4 text-xs hover:bg-surface ${
                     isCurrent ? "bg-surface" : ""
-                  }`}
+                  } ${a.excluded ? "text-fg-faint line-through" : ""}`}
                   style={{
                     height: ROW_HEIGHT,
                     transform: `translateY(${vitem.start}px)`,
@@ -144,6 +144,7 @@ export function ListView(): React.ReactElement | null {
                 >
                   <span className="text-fg-muted">{shortDate(row.raw[FIELD.paymentDate] || row.raw[FIELD.opDate])}</span>
                   <span className="truncate text-fg" title={row.raw[FIELD.description]}>
+                    {a.excluded && <span className="mr-1 text-neg no-underline">✕</span>}
                     {!a.annotated && <span className="mr-1 text-accent">•</span>}
                     {row.raw[FIELD.description] || "—"}
                   </span>
@@ -157,6 +158,9 @@ export function ListView(): React.ReactElement | null {
                   </span>
                   <span className="truncate text-fg" title={a.true_category}>
                     {a.true_category || <span className="text-fg-faint">—</span>}
+                  </span>
+                  <span className="truncate text-fg-muted" title={a.initiator}>
+                    {a.initiator || <span className="text-fg-faint">—</span>}
                   </span>
                   <span className="uppercase text-fg-muted">{a.need_want || ""}</span>
                   <span className="text-right">{a.is_recurring ? "↻" : ""}</span>

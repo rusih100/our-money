@@ -2,8 +2,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import type { Dataset } from "../types";
 import { useStore } from "../store";
-import { deriveCategories, parseCsv, serializeCsv } from "./csv";
-import { loadCategories, loadProgress, saveCategories } from "./storage";
+import { parseCsv, serializeCsv } from "./csv";
+import { loadCategories, loadInitiators, loadProgress } from "./storage";
 
 interface ReadResult {
   content: string;
@@ -35,14 +35,12 @@ export async function loadPath(path: string): Promise<void> {
       skipped,
     };
 
-    // Categories persist across sessions; seed from the dataset on first run.
-    let categories = await loadCategories();
-    if (!categories || categories.length === 0) {
-      categories = deriveCategories(rows);
-      await saveCategories(categories);
-    }
+    // Categories and initiators persist globally across sessions. Both start
+    // empty — the user builds the lists by hand; no auto-seeding from the bank.
+    const categories = (await loadCategories()) ?? [];
+    const initiators = (await loadInitiators()) ?? [];
 
-    store.loadDataset(dataset, categories);
+    store.loadDataset(dataset, categories, initiators);
 
     // Resume any previously saved annotation progress for this exact file.
     const saved = await loadProgress(path);
@@ -85,7 +83,8 @@ export async function exportDataset(): Promise<void> {
   try {
     const content = serializeCsv(dataset);
     await invoke("write_csv", { path: target, content, encoding: dataset.encoding });
-    store.pushToast(`Экспортировано строк: ${dataset.rows.length} → ${fileName(target)}`, "success");
+    const exported = dataset.rows.filter((r) => !r.annotation.excluded).length;
+    store.pushToast(`Экспортировано строк: ${exported} → ${fileName(target)}`, "success");
   } catch (err) {
     store.pushToast(`Ошибка экспорта: ${String(err)}`, "error");
   }
