@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+/* Class-based dark mode so we can toggle at runtime. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Semantic tokens. Values swap under .dark; utilities below stay stable. */
+:root {
+  --bg: #ffffff;
+  --surface: #f6f7f9;
+  --surface-2: #eef0f3;
+  --border: #e2e5ea;
+  --fg: #1a1d23;
+  --fg-muted: #6b7280;
+  --fg-faint: #9aa1ac;
+  --accent: #4f46e5;
+  --accent-fg: #ffffff;
+  --pos: #15803d;
+  --neg: #b91c1c;
+  --badge-bg: #e7e9ee;
+  --badge-fg: #4b5563;
+  --overlay: rgba(15, 18, 23, 0.45);
+}
+
+.dark {
+  --bg: #0e1014;
+  --surface: #15181e;
+  --surface-2: #1c2027;
+  --border: #262b34;
+  --fg: #e6e8ec;
+  --fg-muted: #9aa1ac;
+  --fg-faint: #6b727d;
+  --accent: #6366f1;
+  --accent-fg: #ffffff;
+  --pos: #4ade80;
+  --neg: #f87171;
+  --badge-bg: #262b34;
+  --badge-fg: #aab1bd;
+  --overlay: rgba(0, 0, 0, 0.55);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-faint: var(--fg-faint);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-pos: var(--pos);
+  --color-neg: var(--neg);
+  --color-badge-bg: var(--badge-bg);
+  --color-badge-fg: var(--badge-fg);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* Flat aesthetic: keep transitions quick and calm. */
+* {
+  transition-duration: 120ms;
+}
+
+/* A small monospaced keycap used for hotkey badges. */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 0.3rem;
+  background: var(--surface-2);
+  color: var(--fg-muted);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+/* Thin custom scrollbars to match the dense look. */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}

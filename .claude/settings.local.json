@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(rustc --version)",
+      "PowerShell(cargo --version)",
+      "PowerShell(rustup --version)",
+      "PowerShell(try { \\(Get-Command cargo-tauri -ErrorAction Stop\\).Source } catch { \"cargo-tauri: NOT FOUND\" }; npm ls -g @tauri-apps/cli 2>$null)"
+    ]
+  }
+}
